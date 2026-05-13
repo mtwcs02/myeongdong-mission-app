@@ -351,14 +351,46 @@ if st.session_state.current_spot_id is None:
     <div class="mission-card">
         <h4>탐방 가이드</h4>
         <ol>
-            <li>왼쪽 사이드바에서 원하는 <b>장소를 선택</b>합니다.</li>
+            <li>아래에서 원하는 <b>장소를 선택</b>합니다.</li>
             <li><b>[📖 역사 학습]</b>에서 이야기를 꼼꼼히 읽고 완료 버튼을 누릅니다.</li>
             <li><b>[📸 사진 인증]</b>에서 현장 사진을 찍어 업로드합니다. (50% 이상 성공 시 통과)</li>
             <li><b>[❓ 역사 퀴즈]</b>를 풀어 미션을 최종 완료하세요!</li>
         </ol>
     </div>
     """, unsafe_allow_html=True)
-    st.info("시작하려면 사이드바에서 장소를 선택해보세요!")
+
+    # ── 장소 선택 카드 (모바일 메인 진입점) ──────────────────────────
+    st.markdown("### 📍 장소를 선택하세요")
+    cols = st.columns(2)  # 2열 그리드 — 모바일에서도 보기 좋음
+    for idx, spot in enumerate(SPOTS):
+        p = st.session_state.spot_progress[spot['id']]
+        if p['quizzed']:
+            icon, badge_color, badge_text = "✅", "#22c55e", "완료"
+        elif p['authenticated']:
+            icon, badge_color, badge_text = "📸", "#3b82f6", "퀴즈 전"
+        elif p['learned']:
+            icon, badge_color, badge_text = "📖", "#f59e0b", "학습 완료"
+        else:
+            icon, badge_color, badge_text = "⚪", "#9ca3af", "미방문"
+
+        with cols[idx % 2]:
+            # 카드 HTML (클릭은 아래 버튼으로)
+            st.markdown(f"""
+                <div style="background:white; border-radius:14px; padding:14px 16px 6px 16px;
+                            box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:4px;
+                            border-top: 4px solid {badge_color};">
+                    <div style="font-size:1.4rem;">{icon}</div>
+                    <div style="font-weight:700; font-size:0.95rem; color:#1e293b; margin:4px 0 2px 0;">
+                        {spot['name']}
+                    </div>
+                    <span style="font-size:0.78rem; background:{badge_color}22;
+                                 color:{badge_color}; padding:2px 8px; border-radius:20px;
+                                 font-weight:700;">{badge_text}</span>
+                </div>
+            """, unsafe_allow_html=True)
+            if st.button("선택하기", key=f"main_btn_{spot['id']}", use_container_width=True):
+                st.session_state.current_spot_id = spot['id']
+                st.rerun()
 
 else:
     # =====================================================================
@@ -372,6 +404,12 @@ else:
         st.rerun()
 
     progress = st.session_state.spot_progress[current_spot['id']]
+
+    # 모바일용 상단 홈 버튼 (사이드바 없이도 돌아갈 수 있게)
+    if st.button("◀ 장소 목록으로 돌아가기", type="secondary"):
+        st.session_state.current_spot_id = None
+        st.rerun()
+
     st.title(f"{current_spot['name']}")
 
     # ------------------------------------------------------------------
