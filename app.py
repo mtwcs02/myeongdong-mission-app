@@ -229,15 +229,14 @@ def get_image_base64(path):
 
 
 # =====================================================================
-# 효과 트리거 (세션 초기화 직후 실행)
+# 효과 트리거
+# rerun() 이후 완료 화면이 렌더링될 때 실행되도록
+# trigger 플래그를 여기서 확인하고 즉시 초기화
 # =====================================================================
-if st.session_state.trigger_balloons:
-    st.balloons()
-    st.session_state.trigger_balloons = False
-
-if st.session_state.trigger_confetti:
-    show_confetti()
-    st.session_state.trigger_confetti = False
+_show_balloons  = st.session_state.trigger_balloons
+_show_confetti  = st.session_state.trigger_confetti
+st.session_state.trigger_balloons = False
+st.session_state.trigger_confetti = False
 
 # 완주 여부 확인 및 날짜 기록
 if len(st.session_state.completed_missions) == len(SPOTS) and st.session_state.completion_date is None:
@@ -564,6 +563,12 @@ else:
     # 완료 화면
     # ------------------------------------------------------------------
     else:
+        # 퀴즈 정답 직후 rerun → 여기서 효과 실행 (rerun 전에 띄우면 사라짐)
+        if _show_balloons:
+            st.balloons()
+        if _show_confetti:
+            show_confetti()
+
         st.markdown("""
             <div style="text-align: center; padding: 30px; background-color: #f0fdf4; border-radius: 20px; border: 3px solid #22c55e; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(34, 197, 94, 0.2);">
                 <h1 style="color: #15803d; margin: 0; font-size: 3.5rem !important;">🎊 훌륭해! 🎊</h1>
